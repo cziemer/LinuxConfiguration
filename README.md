@@ -6,6 +6,18 @@ https://review.udacity.com/#!/projects/3573679011/rubric
 * Hosting by: Amazon Lightsail
 * Username / Password: grader, grader
 
+## Summary of Software Installed
+* Apache2
+* postgreSQL
+* mod_wsgi
+* Python-pip
+* virtualEnv
+* Flask
+* sqlAlchemy
+* oauth2client
+* httplib2
+* requests
+
 ## 1. Get a Server setup
 1. Log into (or create an account) for [Amazon Lightsail](https://lightsail.aws.amazon.com/).
 2. Create an instance
@@ -23,7 +35,7 @@ https://review.udacity.com/#!/projects/3573679011/rubric
    * Manually edit port 22 to 2200 (toward top of file)
    * Save (Write Out) the update
    * Restart the SSH to take new configuration `sudo service ssh restart`
-3. Configure UFW (Firewall) to only allow incoming connections for SSH (port 2200), HEEP (port 80) and NTP (port 123)
+3. Configure UFW (Firewall) to only allow incoming connections for SSH (port 2200), HTTP (port 80) and NTP (port 123)
    * Check current firewall status `sudo ufw status` **Note**: Will show Status: inactive if not yet configured
    * Block all incoming ports by default `sudo ufw default deny incoming`
    * Allow all outgoing ports `sudo ufw default allow outgoing`
@@ -31,8 +43,20 @@ https://review.udacity.com/#!/projects/3573679011/rubric
    * Allow www (port 80) 'sudo ufw allow www'
    * Allow Incoming Connection for NTP port (123) `sudo ufw allow 123/udp`
    * Enable the Firewall (be sure that SSH access is allowed) `sudo ufw enable`
-   * Verify Firewall settings `sudo ufw status`
    * Modify Lightsail Instance settings to allow the above changes and remove SSH port 22
+   * Verify Firewall settings `sudo ufw status`
+   
+
+| To | Action | From |
+|-----------|------------|-----------|
+|2200/tcp|ALLOW|Anywhere|
+|80/tcp|ALLOW|Anywhere|
+123/udp|ALLOW|Anywhere|
+2200/tcp (v6)|ALLOW|Anywhere (v6)|
+80/tcp (v6)|ALLOW|Anywhere (v6)|
+123/udp (v6)|ALLOW|Anywhere (v6)|
+
+
 ## 3. Give *grader* access
 1. Create a new user account named grader `sudo adduser grader`
 2. Give grader permission to sudo
@@ -86,6 +110,7 @@ https://review.udacity.com/#!/projects/3573679011/rubric
 | postgres  | Superuser, Create role, Create DB, Replication, Bypass RLS | {}        |
 
    * Do not allow remote connections
+     * This is current default when installing PostgreSQL from the Ubuntu properties [source](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-16-04)
 4. Install GIT `sudo service apache2 start` `sudo apt-get install git`
 
 ## 5. Deploy the Item Catalog project
@@ -97,6 +122,8 @@ https://review.udacity.com/#!/projects/3573679011/rubric
    * Clone the GIT Repo `git clone https://github.com/cziemer/FullStackItemCatelog` (yes, it was misspelled)
 2. Minor changes to project files due to running on a server versus local server:
    * Rename finalproject.py to \__init__.py `finalproject.py __init__.py`
+   * Reconfigure oAuth on Google
+   * Update client_secrets file with new info from Google
    * Update the path of client_secrets inside \__init__.py
    * Add app secret key for the flask app in \__init__.py
    * Update path of python engine in database_setup.py and application.py
@@ -105,6 +132,9 @@ https://review.udacity.com/#!/projects/3573679011/rubric
 3. Build the database `python database_setup.py`
 4. Populate the Database `python manycars.py`
 5. Ensure .git directory is not publicly accessible
+   * Create .htaccess file `cd /var/www/catalog/`
+   * Edit above file `sudo nano .htaccess`
+   * Paste code in file and save `RedirectMatch 404 /\.git`
 ## 5. Additional Requirements
 1. Block root remote access & Block passwords
    * Open config file `sudo nano /etc/ssh/sshd_config`
@@ -112,12 +142,15 @@ https://review.udacity.com/#!/projects/3573679011/rubric
      * Change *PermitRootLogin* to *no*
      * Save File
    * Restart the server to enforce the changes `sudo service ssh restart`
-2. Authentication via key-based RSA only
+2. Authentication via key-based RSA only (see above)
 
 ## Sources Consulted
 
 * [Digital Ocean - How to Deploy a Flask Application on an Ubuntu VPS](https://www.digitalocean.com/community/tutorials/how-to-deploy-a-flask-application-on-an-ubuntu-vps)
+* [Disable SSH login from a server](https://askubuntu.com/questions/27559/how-do-i-disable-remote-ssh-login-as-root-from-a-server)
+* [How to Install and Use PostgreSQL on Ubuntu](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-16-04)
 * [Pip and Virtualenv for Beginners](https://www.dabapps.com/blog/introduction-to-pip-and-virtualenv-python/)
 * [Creating a Server with Amazon Lightsail](https://medium.com/@mariasurmenok/creating-a-server-with-amazon-lightsail-11c377cf814c)
 * [Check Remote Database Connection permissions](https://www.digitalocean.com/community/tutorials/how-to-secure-postgresql-on-an-ubuntu-vps)
+* [Prevent access to git directory](https://serverfault.com/questions/128069/how-do-i-prevent-apache-from-serving-the-git-directory)
 * [Student Project Consulted for configuration settings](https://libraries.io/github/golgtwins/Udacity-P7-Linux-Server-Configuration)
